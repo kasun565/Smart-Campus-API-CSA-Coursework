@@ -2,9 +2,9 @@
 markdown
 # Smart Campus API
 
-**Module:** Client-Server Architectures (5COSC022W)  
-**Author:** [Your Name]  
-**Date:** April 2026
+**Module:** Client-Server Architectures   
+**Author:** Kasun Kanchana
+**ID:** w2120707 / 20232897
 
 ---
 
@@ -18,7 +18,7 @@ RESTful API for managing campus rooms and sensors using JAX-RS (Jersey) with emb
 
 | Technology | Version |
 |------------|---------|
-| Java | 11 |
+| Java | 21 |
 | JAX-RS (Jersey) | 3.1.3 |
 | Grizzly | 4.0.0 |
 | Maven | 3.x |
@@ -40,17 +40,18 @@ mvn exec:java
 Server starts at: http://localhost:8080
 
 API Endpoints
-Method	Endpoint	Description
-GET	/api/v1	Discovery with HATEOAS links
-GET	/api/v1/rooms	Get all rooms
-POST	/api/v1/rooms	Create room
-GET	/api/v1/rooms/{id}	Get one room
-DELETE	/api/v1/rooms/{id}	Delete room (if no sensors)
-GET	/api/v1/sensors	Get all sensors
-GET	/api/v1/sensors?type=CO2	Filter sensors by type
-POST	/api/v1/sensors	Create sensor (valid roomId required)
-GET	/api/v1/sensors/{id}/readings	Get reading history
-POST	/api/v1/sensors/{id}/readings	Add reading (updates currentValue)
+Method	    Endpoint	                       Description
+GET	        /api/v1	                         Discovery with HATEOAS links
+GET	        /api/v1/rooms	                   Get all rooms
+POST	      /api/v1/rooms	                   Create room
+GET       	/api/v1/rooms/{id}	             Get one room
+DELETE	    /api/v1/rooms/{id}	             Delete room (if no sensors)
+GET	        /api/v1/sensors	                 Get all sensors
+GET	        /api/v1/sensors?type=CO2	       Filter sensors by type
+POST	      /api/v1/sensors	                 Create sensor (valid roomId required)
+GET	        /api/v1/sensors/{id}/readings	   Get reading history
+POST	      /api/v1/sensors/{id}/readings	   Add reading (updates currentValue)
+
 Sample curl Commands
 bash
 # 1. Discovery
@@ -87,30 +88,33 @@ curl -X DELETE http://localhost:8080/api/v1/rooms/1
 curl -X POST http://localhost:8080/api/v1/sensors \
   -H "Content-Type: application/json" \
   -d '{"name":"Bad","type":"CO2","unit":"ppm","roomId":9999}'
+
 HTTP Status Codes
-Status	When Used
-200 OK	Successful GET
-201 Created	Successful POST
-204 No Content	Successful DELETE
-400 Bad Request	Missing required field
-403 Forbidden	Sensor in maintenance mode
-404 Not Found	Resource doesn't exist
-409 Conflict	Delete room with sensors
-415 Unsupported Media Type	Wrong Content-Type
-422 Unprocessable Entity	Invalid roomId reference
-500 Internal Server Error	Unexpected error (no stack trace exposed)
+Status	                        When Used
+200 OK	                        Successful GET
+201 Created	                    Successful POST
+204 No Content	                Successful DELETE
+400 Bad Request	                Missing required field
+403 Forbidden	                  Sensor in maintenance mode
+404 Not Found	                  Resource doesn't exist
+409 Conflict	                  Delete room with sensors
+415 Unsupported Media Type	    Wrong Content-Type
+422 Unprocessable Entity	      Invalid roomId reference
+500 Internal Server Error	      Unexpected error (no stack trace exposed)
+
 Error Handling
 All errors return JSON, never Java stack traces.
 
-Exception	Status	Scenario
-RoomNotEmptyException	409	Delete room with sensors
-LinkedResourceNotFoundException	422	Sensor with invalid roomId
-SensorUnavailableException	403	Reading to maintenance sensor
-GlobalExceptionMapper	500	Any unexpected error
+Exception	                       Status	  Scenario
+RoomNotEmptyException	           409	    Delete room with sensors
+LinkedResourceNotFoundException	 422	    Sensor with invalid roomId
+SensorUnavailableException	     403	    Reading to maintenance sensor
+GlobalExceptionMapper	           500	    Any unexpected error
 
 Coursework Questions & Answers
 
-Part 1: Service Architecture & Setup 
+Part 1: Service Architecture & Setup
+
 1. Project & Application Configuration 
 Question: 
 In your report, explain the default lifecycle of a JAX-RS Resource class. Is a new instance 
@@ -126,7 +130,8 @@ differently, considering the possibility of multiple instances having access to 
 memory space simultaneously, thus requiring me to use thread-safe collections such as 
 Concurrent HashMap instead of simple HashMap to avoid concurrency issues. 
 Furthermore, I make sure that all data stored for use across instances is a static member, 
-along with using atomic increments to generate IDs. 
+along with using atomic increments to generate IDs.
+ 
 2. The ”Discovery” Endpoint 
 Question:  
 Why is the provision of ”Hypermedia” (links and navigation within responses) considered 
@@ -143,7 +148,8 @@ clients automatically, the fact that clients will always use the current URL str
 will not break in case it changes, and the ability of new programmers to learn the system 
 by following links, similarly to navigating a website. My implementation includes a 
 discovery endpoint GET /api/v1 that delivers a JSON object including the links to the 
-rooms and sensors collections. 
+rooms and sensors collections.
+ 
 Part 2: Room Management 
 1. Room Resource Implementation  
 Question:  
@@ -158,7 +164,8 @@ bandwidth at first due to a larger payload, but the advantage is that all needed
 is returned in one single call, without the need for several round trips. In my design, I 
 chose to return complete room objects, as room objects have low weightage and require 
 just a few attributes such as id, name, building, floor, type, and sensor Ids, and clients 
-usually require all of them anyway. 
+usually require all of them anyway.
+
 2. Room Deletion & Safety Logic 
 Question:  
 Is the DELETE operation idempotent in your implementation? Provide a detailed 
@@ -176,7 +183,8 @@ For all additional identical requests, the server continues to return 404 Not Fo
 because the room remains absent. While the HTTP status code changes from 204 to 404 
 after the first request, the server's final resource state after every request is identical - 
 "room does not exist" - which satisfies the definition of idempotence where the resulting 
-state is the same regardless of how many times the operation is performed. 
+state is the same regardless of how many times the operation is performed.
+ 
 Part 3: Sensor Operations & Linking 
 1. Sensor Resource & Integrity 
 Question:  
@@ -201,7 +209,8 @@ at the value specified in the Content-Type request header first and then searche
 its MessageBodyReader registry to find one that is able to parse that specific media type 
 to my Sensor object. Since there are no readers for text/plain or application/xml media 
 types in my project due to only having JSON dependencies, it directly sends back the 415 
-error response. 
+error response.
+ 
 2. Filtered Retrieval & Search  
 Question:  
 You implemented this filtering using @QueryParam. Contrast this with an alternative 
@@ -227,7 +236,8 @@ that each filter value is itself a hierarchical resource. Additionally, query pa
 filters optional by nature (the client can simply omit them), while path parameters would 
 require either always providing a value or creating completely separate endpoints. 
 Industry standards from major APIs like Google, GitHub, and Amazon all use query 
-strings for filtering collections for these exact reasons. 
+strings for filtering collections for these exact reasons.
+ 
 Part 4: Deep Nesting with Sub - Resources  
 1. The Sub-Resource Locator Pattern 
 Question: Discuss the architectural benefits of the Sub-Resource Locator pattern. How 
@@ -246,7 +256,8 @@ can be reused across different parent resources, and each file will remain conci
 sensors, while all the logic for SensorReadingResource is separated from it. This way, it 
 automatically gets the id of the current sensor and only includes methods related to the 
 management of readings. Otherwise, all those methods (GET, POST, PUT, DELETE) 
-would end up in SensorResource making the file extremely big. 
+would end up in SensorResource making the file extremely big.
+ 
 Part 5: Advanced Error Handling, Exception Mapping & Logging 
 2. Dependency Validation (422 Unprocessable Entity)  
 Question:  
@@ -263,7 +274,8 @@ creation example, when a client sends valid JSON with a roomId that doesn't exis
 endpoint /api/v1/sensors definitely exists and the JSON format is correct, so returning 404 
 would be misleading. Returning 422 properly communicates to the client that their request 
 format is fine but the specific roomId value they provided does not exist in the system, 
-which is a business validation error, not a resource not found error. 
+which is a business validation error, not a resource not found error.
+
 4. The Global Safety Net (500) 
 Question:  
 From a cybersecurity standpoint, explain the risks associated with exposing internal Java 
@@ -284,7 +296,8 @@ revealed directory structures, craft targeted SQL injection attacks, perform den
 service attacks by exploiting revealed null pointer conditions, and map internal network 
 topology for lateral movement. My implementation uses a GlobalExceptionMapper that 
 logs full stack traces to the server console for debugging but returns only a generic 
-"Internal Server Error" message to clients, following secure error handling practices. 
+"Internal Server Error" message to clients, following secure error handling practices.
+ 
 5. API Request & Response Logging Filters 
 Question:  
 Why is it advantageous to use JAX-RS filters for cross-cutting concerns like logging, 
@@ -329,9 +342,11 @@ src/main/java/com/smartcampus/
 │   └── GlobalExceptionMapper.java
 └── filter/
     └── LoggingFilter.java
+
 Sample Data (Pre-loaded)
-Room ID	Name	Sensors
-1	Engineering Lab 101	Sensor 100
-2	Lecture Hall A	None
-Sensor ID	Name	Type	Room
-100	CO2 Sensor 1	CO2	1
+Room ID	   Name	                Sensors
+1	         Engineering Lab 101	Sensor 100
+2	         Lecture Hall A	      None
+
+Sensor ID	  Name	          Type	 Room
+100	        CO2 Sensor 1	  CO2	   1
